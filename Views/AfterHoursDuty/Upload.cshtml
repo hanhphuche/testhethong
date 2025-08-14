@@ -1,0 +1,49 @@
+@{
+    ViewBag.Title = "Import Lịch Trực Ngoài Giờ";
+}
+
+<h2>Import Lịch Trực Ngoài Giờ</h2>
+<p>
+    <a href="@Url.Action("Template", "AfterHoursDuty")" class="btn btn-default">Tải template</a>
+</p>
+<form id="uploadForm" enctype="multipart/form-data">
+    <input type="file" name="file" accept=".xlsx,.xls" />
+    <button type="submit" class="btn btn-primary">Import</button>
+</form>
+
+<pre id="result" style="margin-top:15px"></pre>
+
+@section scripts {
+<script>
+    (function(){
+        var form = document.getElementById('uploadForm');
+        var result = document.getElementById('result');
+        form.addEventListener('submit', function(e){
+            e.preventDefault();
+            result.textContent = 'Đang xử lý...';
+            var formData = new FormData(form);
+            fetch('@Url.Action("Import", "AfterHoursDuty")', {
+                method: 'POST',
+                body: formData,
+                credentials: 'same-origin'
+            }).then(function(r){ return r.json(); })
+              .then(function(data){
+                  if(data.success){
+                      var text = 'Thành công: ' + data.saved + '/' + data.valid + '/' + data.total + '\n';
+                      if (data.errors && data.errors.length){
+                          text += 'Một số lỗi:\n';
+                          data.errors.forEach(function(err){
+                              text += 'Dòng ' + err.row + ': ' + err.errors.join('; ') + '\n';
+                          });
+                      }
+                      result.textContent = text;
+                  } else {
+                      result.textContent = 'Lỗi: ' + data.message;
+                  }
+              }).catch(function(err){
+                  result.textContent = 'Lỗi: ' + err;
+              });
+        });
+    })();
+</script>
+}
